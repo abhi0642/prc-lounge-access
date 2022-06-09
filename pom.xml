@@ -29,6 +29,20 @@
 				<artifactId>mule-maven-plugin</artifactId>
 				<version>${mule.maven.plugin.version}</version>
 				<extensions>true</extensions>
+				<configuration>
+					<cloudHubDeployment>
+						<uri>https://anypoint.mulesoft.com</uri>
+						 <server>${server}</server>
+						 <muleVersion>${app.runtime}</muleVersion>
+						 <applicationName>${app.name}</applicationName>
+						 <workers>${worker}</workers>
+						 <workerType>${workerType}</workerType>
+						 <environment>${environment}</environment>
+						 <objectStoreV2>true</objectStoreV2>
+					</cloudHubDeployment>
+				
+					<classifier>mule-application</classifier>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
@@ -82,7 +96,7 @@
 		<repository>
 			<id>anypoint-exchange-v3</id>
 			<name>Anypoint Exchange</name>
-			<url>https://maven.anypoint.mulesoft.com/api/v3/maven</url>
+			<url>https://maven.anypoint.mulesoft.com/api/v3/organizations/4cc38576-1270-4d4d-8913-68607327c7a2/maven</url>
 			<layout>default</layout>
 		</repository>
 		<repository>

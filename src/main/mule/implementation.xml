@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<flow name="receiveMessageFlow" doc:id="4c01e1e3-5442-424d-a870-bba9f0869297" initialState="started">
+		<sqs:receivemessages doc:name="Receive messages" doc:id="0a59659c-1123-49d3-b89c-0774a7b3b0a0" config-ref="Amazon_SQS_Configuration" queueUrl="${secure::sqs.url}" numberOfMessages="10"/>
+		<ee:transform doc:name="Transform Message" doc:id="df9a5c8f-9e61-43ee-b3fe-280bc1870330" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload splitBy  "|")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<s3:create-object doc:name="Create object" doc:id="6fa6f866-b8ac-4c4e-b17a-1d22264ec261" config-ref="Amazon_S3_Configuration" bucketName="${secure::amazon.bucket}" key='#["lounge access data for " ++ now() ++ ".csv"]'/>
+	</flow>
+	<flow name="sendMessageFlow" doc:id="0b1a831c-4d76-41b0-af23-2dcc9facb859" >
+		<ee:transform doc:name="Transform Message" doc:id="ef62fa38-7702-43cf-b413-3b76d612834d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	bank : attributes.queryParams.bank,
+	card_type: attributes.queryParams.card_type,
+	card_category: attributes.queryParams.card_category
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[attributes.queryParams.bank]" doc:name="bank" doc:id="abbe0fa3-b370-44fa-af87-741f6407b91f" variableName="bank"/>
+		<set-variable value="#[attributes.queryParams.card_type]" doc:name="card_type" doc:id="e0fe0a5d-b532-455a-817e-f53615785570" variableName="card_type"/>
+		<set-variable value="#[attributes.queryParams.card_category]" doc:name="card_category" doc:id="37d7646d-9628-45b5-bcf0-7858013f4425" variableName="card_category"/>
+		<set-variable value='#[payload.bank as String ++ "|" ++ payload.card_type as String ++ "|" ++ payload.card_category as String]' doc:name="body" doc:id="00c29ceb-c622-4eff-96dc-28ab58cace10" variableName="body"/>
+		<ee:transform doc:name="Transform Message" doc:id="d45d6116-6475-4927-8c0a-38934a8f2e4d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	delaySeconds: 0,
+	body: vars.body as String,
+	messageAttributes: {
+		"bank": {
+			"stringValue" : attributes.queryParams.bank,
+			"dataType" : "String.bank"
+		} as Object {
+			class: "org.mule.extension.sqs.api.model.MessageAttributeValue"
+		},
+		"card_type": {
+			"stringValue" : attributes.queryParams.card_type,
+			"dataType" : "String.card_type"
+		} as Object {
+			class : "org.mule.extension.sqs.api.model.MessageAttributeValue"
+		},
+		"card_category": {
+			"stringValue" : attributes.queryParams.card_category,
+			"dataType" : "String.card_category"
+		} as Object {
+			class : "org.mule.extension.sqs.api.model.MessageAttributeValue"
+		}
+	} as Object {
+		class: "java.util.HashMap"
+	}
+} as Object {
+	class: "org.mule.extension.sqs.api.model.Message"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<sqs:send-message doc:name="Send message" doc:id="7ce8a6f7-a120-411a-b44b-58650fb64a64" config-ref="Amazon_SQS_Configuration" queueUrl="${secure::sqs.url}"/>
+		<flow-ref doc:name="Flow Reference" doc:id="7133a98c-ed40-48d9-875d-a5f0d7e03269" name="newRelicFlow"/>
+	</flow>
+	<flow name="newRelicFlow" doc:id="fbd5e19c-4890-4950-8840-efcc2c8957e4" >
+		<http:request method="GET" doc:name="Request" doc:id="703e6a11-1667-42d9-92ef-a866db447b7d" config-ref="HTTP_Request_configuration" path="/api/cards">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"card_category" : vars.card_category,
+	"bank" : vars.bank,
+	"card_type" : vars.card_type
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="35903147-82df-45ef-97a8-6b38dd0fc115">
+			<when expression='#[payload[0] == "No access to lounge"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="62275038-3e07-45a1-aa5e-51062141cff7" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    severity: &quot;LOW&quot;,&#10;    eventType: &quot;MulesLogs&quot;,&#10;    env: &quot;DEV&quot;,&#10;    messageId: uuid() as String,&#10;    muleAppName: &quot;lounge-access&quot;,&#10;    intgCreationDate: now() as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.ss'Z'&quot;},&#10;    payload: write(payload,'application/json'),&#10;    result: &quot;No Access&quot;,&#10;    bank: vars.bank,&#10;    card_type: vars.card_type,&#10;    card_category: vars.card_category&#10;    &#10;}]" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="ecd82c0d-ceb2-445e-a589-000f8d057adb" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    severity: &quot;LOW&quot;,&#10;    eventType: &quot;MulesLogs&quot;,&#10;    env: &quot;DEV&quot;,&#10;    messageId: uuid() as String,&#10;    muleAppName: &quot;lounge-access&quot;,&#10;    intgCreationDate: now() as String {format: &quot;yyyy-MM-dd'T'HH:mm:ss.ss'Z'&quot;},&#10;    payload: write(payload,'application/json'),&#10;    result: &quot;Access&quot;,&#10;    bank: vars.bank,&#10;    card_type: vars.card_type,&#10;    card_category: vars.card_category&#10;    &#10;}]" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

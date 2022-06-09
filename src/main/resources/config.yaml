@@ -1,0 +1,17 @@
+http:
+  host: "0.0.0.0"
+  port: "8081"
+http1:
+  host: "![cCiQ1WFysoZnbLC6qiSDYTUaEe4I67ti1s5EsVCj8Ao=]"
+  port: "80"
+sqs:
+  url: "![0IUzImMd7myi9oD6VWuig8zJ2BxuqefHcrCm3gcdq/05/U04jhuSFG9XBj/WBJ1MhEOSdETmofbgUzXEJ5omfw==]"
+  arn: "![mQ+qvuvblv0pvj1R7Pg7W9RjIVCWDSfyjhPwfZM0WkgrVsCgPt+ztr7UF6Itq/AM]"
+  accesskey: "![3r4NJZ4jDEWnZYNwF3WxKmmvN1psyT3wrNYznYEJw/I=]"
+  secretkey: "![ynwvau9LSBRC36lNHFtGWkQPqdOWr5JwXWfxHdXjnfiVYfmbk3yAiCGffZNu7qID]"
+
+amazon:
+  secret_key: "![ynwvau9LSBRC36lNHFtGWkQPqdOWr5JwXWfxHdXjnfiVYfmbk3yAiCGffZNu7qID]"
+  access_key : "![3r4NJZ4jDEWnZYNwF3WxKmmvN1psyT3wrNYznYEJw/I=]"
+  region: "US East (N. Virginia) us-east-1"
+  bucket: "![CpNEVd5Duv6lIE1sj9429jfVU7SJ+cYDCT3eTbvjaEQ=]"

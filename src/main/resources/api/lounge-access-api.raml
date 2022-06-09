@@ -1,0 +1,22 @@
+#%RAML 1.0
+title: lounge-access-api
+/lounge:
+  get:
+    queryParameters:
+      bank:
+        required: true
+        type: string
+      card_type:
+        required: true
+        enum:
+          - Visa
+          - MasterCard
+          - Rupay
+      card_category:
+        required: true
+        type: string
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include /example/response.raml

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:sqs="http://www.mulesoft.org/schema/mule/sqs" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sqs http://www.mulesoft.org/schema/mule/sqs/current/mule-sqs.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<sqs:config name="Amazon_SQS_Configuration" doc:name="Amazon SQS Configuration" doc:id="6fc1c6a3-60c7-4fd3-9138-bad62abbec70" defaultQueueUrl="${sqs.url}">
+		<sqs:basic-connection accessKey="${secure::sqs.accesskey}" secretKey="${secure::sqs.secretkey}" testQueueArn="${secure::sqs.arn}"/>
+	</sqs:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="ede4a791-c088-44fc-98c2-c9adce837893" file="config.yaml" />
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP_Request_configuration" doc:id="717a1c9c-c8f0-454c-82d3-552969d2cb0e">
+		<http:request-connection host="${secure::http1.host}" port="${http1.port}" />
+	</http:request-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="4f878173-e3fe-4210-b77a-08269cfc2b18" >
+		<vm:queues >
+			<vm:queue queueName="relic-queuq" queueType="PERSISTENT"/>
+		</vm:queues>
+	</vm:config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="be854c15-7507-463b-b14b-d0f844b1cdf4" >
+		<s3:basic-connection accessKey="${secure::amazon.access_key}" secretKey="${secure::amazon.secret_key}"/>
+	</s3:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="64a50099-f2b0-471f-8c7f-015a234de42a" file="config.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0473c78c-2074-4bdb-87c9-7a2dc033d0b5" file="config.yaml" key="you-cant-guess-1"/>
+</mule>

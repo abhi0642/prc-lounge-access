@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_0b1a831c_4d76_41b0_af23_2dcc9facb859_Output_Variables_card_type = Any
+
